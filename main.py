@@ -101,7 +101,7 @@ Cand biletul se deplaseaza spre stanga de pe un rand de banci pe altul, se va af
 # fisierOut = open(pathOut,'w')
 # NSOL = int(input("NSOL= "))
 # timeout = int(input(Timp de timeout= "))
-
+########################################### CITIRE DATE INPUT ########################################
 # Citire folosita pentru testing
 fisierIn = open('fisier.in','r')
 fisierOut = open('fisier.out','w')
@@ -134,21 +134,89 @@ for line in linii:
 
 # Clase ajutatoare: NodParcurgere, Nod, Problema
 
-# Clasa Nod, cu proprietatile:
-#   - info despre nod
-#   - h^
-#   In cazul de fata am ales: numele copilului(pentru nodul initial este 'ionel' iar pentru cel final este 'dragos'
-#   si h^, pe care am notat-o cu h_ este estimarea costului facuta pentruu nod, de la nodul curent la nodul scop
+# In exemplul dat la laborator s-a integrat clasa Nod in clasa NodParcurgere prin a introduce info si h in NodParcurgere,
+# Pentru evitarea confuziei, am ales sa folosesc aceeasi abordare, de aceea urmatoarea secventa de cod este comentata:
 
-class Nod:
-    def __init__(self, copil, h_):
+################################################# CLASA NOD  ##############################################
+
+# # Clasa Nod, cu proprietatile:
+# #   - info despre nod
+# #   - h^
+# #   In cazul de fata am ales: numele copilului(pentru nodul initial este 'ionel' iar pentru cel final este 'dragos'
+# #   si h^, pe care am notat-o cu h_ este estimarea costului facuta pentruu nod, de la nodul curent la nodul scop
+#
+# class Nod:
+#     def __init__(self, copil, h_):
+#         self.copil = copil
+#         self.h_ = h_
+#
+#     def __str__(self):
+#         return f"nod: {self.copil} \n" \
+#                f"h^: {self.h_} \n"
+#
+#     def __repr__(self):
+#         return f"nod: {self.copil} \n" \
+#                f"h^: {self.h_} \n"
+
+########################################### CLASA NOD PARCURGERE ########################################
+# Clasa NodParcurgere, cu proprietatile:
+#   nod - referinta catre nodul corespunzator din graf
+            # #   - info despre nod
+            # #   - h^
+            # #   In cazul de fata am ales: numele copilului(pentru nodul initial este 'ionel' iar pentru cel final este 'dragos'
+            # #   si h^, pe care am notat-o cu h_ este estimarea costului facuta pentruu nod, de la nodul curent la nodul scop
+#   parinte - referinta catre nodul-parinte din arbore. Pentru radacina arborelui, parintele va avea valoarea None.
+#   g - costul de la radacina arborelui pana la nodul curent
+#   f - costul estimat pentru drumul care porneste de la radacina si trece prin nodul curent
+#   expandat - o proprietate optionala (booleana). O putem folosi in locul listei closed si urmatoarele metode:
+#   expandeaza - care va returna o lista cu toti succesorii posibili ai nodului curent
+#   test_scop -care testeaza daca nodul e nod scop
+
+class NodParcurgere:
+    def __init__(self, copil, cost, h_, parinte=None):
         self.copil = copil
+        self.parinte = parinte # daca este radacina => None
+        self.g = cost
         self.h_ = h_
+        # f = g + h
+        self.f = self.g + self.h_
 
-    # test scop pe care un agent il ploate aplica unei singure descrieri de stare pentru a determina daca ea este o
-    # stare de tip scop => in cazul nostru, starea de tip scop == copilFinal
+    def obtineDrum(self):
+        l = [self.copil]
+        nod = self
+        while nod.parinte is not None:
+            l.insert(0, nod.parinte.copil)
+            nod = nod.parinte
+        return l
+
+    def afisDrum(self):
+        l = self.obtineDrum()
+        print(("->").join(l))
+        print("Cost", self.g)
+        return len(l)
+
+    def contineInDrum(self, copilNodNou):
+        nodDrum = self
+        while nodDrum is not None:
+            if copilNodNou ==  nodDrum.copil:
+                return True
+            nodDrum = nodDrum.parinte
+            return False
+
+    def __repr__(self):
+        return f"Nod: {self.copil} \n" \
+               f"Cost nodStart -> nodCurent: {self.g} \n" \
+               f"Cost estimativ nodCurent -> nodScop: {self.h_} \n" \
+               f"Drum = {('->').join(self.obtineDrum())} \n" \
+               f"Cost estimat pentru drum: {self.f} \n"
+
+
+
+# test scop pe care un agent il ploate aplica unei singure descrieri de stare pentru a determina daca ea este o
+# stare de tip scop => in cazul nostru, starea de tip scop == copilFinal
     def testScop(self, nodFinal):
         return self.copil == nodFinal.copil
+
 
 # functia de generare a succesorilor
 
@@ -166,6 +234,13 @@ class Nod:
 
 # documentatie
 # in README.MD
+
+# Clasa Problema => contine datele problemei
+
+# class Problema:
+
+
+########################################### SCRIERE DATE OUTPUT ########################################
 
 
 fisierIn.close()
