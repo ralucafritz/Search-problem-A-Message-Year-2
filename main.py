@@ -132,8 +132,13 @@ for line in linii:
         copilInitial = linie[1]
         copilFinal = linie[3]
 
+# Clase ajutatoare: NodParcurgere, Nod, Problema
 
-# nod => numele copilului si h^->h_
+# Clasa Nod, cu proprietatile:
+#   - info despre nod
+#   - h^
+#   In cazul de fata am ales: numele copilului(pentru nodul initial este 'ionel' iar pentru cel final este 'dragos'
+#   si h^, pe care am notat-o cu h_ este estimarea costului facuta pentruu nod, de la nodul curent la nodul scop
 
 class Nod:
     def __init__(self, copil, h_):
@@ -144,7 +149,6 @@ class Nod:
     # stare de tip scop => in cazul nostru, starea de tip scop == copilFinal
     def testScop(self, nodFinal):
         return self.copil == nodFinal.copil
-
 
 # functia de generare a succesorilor
 
