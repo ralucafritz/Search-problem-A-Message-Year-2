@@ -112,8 +112,8 @@ linii = fisierIn.readlines()
 randuri = 0
 liniiCopii = []
 copiiSuparati = {}
-copilInitial = ""
-copilFinal = ""
+copilStart = ""
+copilScop = ""
 
 for line in linii:
     linie = line.strip("\n").split()
@@ -129,8 +129,8 @@ for line in linii:
         copiiSuparati[linie[0]].append(linie[1])
         copiiSuparati[linie[1]].append(linie[0])
     elif linie[0] == "mesaj:":
-        copilInitial = linie[1]
-        copilFinal = linie[3]
+        copilStart = linie[1]
+        copilScop = linie[3]
 
 # Clase ajutatoare: NodParcurgere, Nod, Problema
 
@@ -172,8 +172,9 @@ for line in linii:
 #   expandeaza - care va returna o lista cu toti succesorii posibili ai nodului curent
 #   test_scop -care testeaza daca nodul e nod scop
 
+
 class NodParcurgere:
-    def __init__(self, copil, cost, h_, parinte=None):
+    def __init__(self, copil, cost, h_, directie, parinte=None):
         self.copil = copil
         self.parinte = parinte # daca este radacina => None
         self.g = cost
@@ -181,20 +182,31 @@ class NodParcurgere:
         # f = g + h
         self.f = self.g + self.h_
 
+        # in cazul problemei noastre, avem nevoie de o directie a drumul care poate fi una din urmatoarele:
+        #               '^'
+        #               '>'
+        #               '<'
+        #               'v'
+        #               '>>'
+        #               '<'
+        # astfel vom introduce inca o proprietate numita directie
+        self.directie = directie
+
     def obtineDrum(self):
-        l = [self.copil]
+        drum = [self.copil]
         nod = self
         while nod.parinte is not None:
-            l.insert(0, nod.parinte.copil)
+            drum.insert(0, nod.parinte.copil)
             nod = nod.parinte
-        return l
+        return drum
 
     def afisDrum(self):
-        l = self.obtineDrum()
-        print(("->").join(l))
+        drum = self.obtineDrum()
+        print(("->").join(drum))
         print("Cost", self.g)
-        return len(l)
+        return len(drum)
 
+    #  pornind de la exemplul din laborator => verificam daca un nod face parte din drum
     def contineInDrum(self, copilNodNou):
         nodDrum = self
         while nodDrum is not None:
@@ -213,10 +225,10 @@ class NodParcurgere:
 
 
 # test scop pe care un agent il ploate aplica unei singure descrieri de stare pentru a determina daca ea este o
-# stare de tip scop => in cazul nostru, starea de tip scop == copilFinal
-    def testScop(self, nodFinal):
-        return self.copil == nodFinal.copil
+# stare de tip scop => in cazul nostru, starea de tip scop == copilScop
 
+    def testScop(self, nodScop):
+        return self.copil == nodScop.copil
 
 # functia de generare a succesorilor
 
@@ -234,11 +246,14 @@ class NodParcurgere:
 
 # documentatie
 # in README.MD
+################################################# PROBLEMA ############################################
 
 # Clasa Problema => contine datele problemei
 
-# class Problema:
-
+class Problema:
+    def __init__(self, nodStart, nodScop):
+        self.nodStart = nodStart
+        self.nodScop = nodScop
 
 ########################################### SCRIERE DATE OUTPUT ########################################
 
