@@ -133,6 +133,19 @@ for line in linii:
         copilFinal = linie[3]
 
 
+# nod => numele copilului si h^->h_
+
+class Nod:
+    def __init__(self, copil, h_):
+        self.copil = copil
+        self.h_ = h_
+
+    # test scop pe care un agent il ploate aplica unei singure descrieri de stare pentru a determina daca ea este o
+    # stare de tip scop => in cazul nostru, starea de tip scop == copilFinal
+    def testScop(self, nodFinal):
+        return self.copil == nodFinal.copil
+
+
 # functia de generare a succesorilor
 
 # calculatera costului pentru o mutare
@@ -149,3 +162,7 @@ for line in linii:
 
 # documentatie
 # in README.MD
+
+
+fisierIn.close()
+fisierOut.close()
