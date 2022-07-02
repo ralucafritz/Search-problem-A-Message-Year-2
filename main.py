@@ -109,30 +109,58 @@ fisierOut = open('fisier.out','w')
 # citire din fisier + parsare fisier de input care respecta formatul cerut in enunt
 linii = fisierIn.readlines()
 
-randuri = 0
+numarRanduri = 0
+numarColoane = 0
 liniiCopii = []
+
+# salvez pozitiile copiilor in banci cu ajutorul unor coordonate de forma (rand, coloana)
+
+coordCopii = {} # {nume, (rand, coloana)} => lista coordonate copii, se afla dupa nume
+# ex:
+#   ionel     0,0
+#   alina     0,1
+#   teo       0,2
+#   alina     0,3
+numeCopii = {} # {(rand, coloana), nume} => lista nume copii, se afla dupa coord
+# ex:
+#   0,0       ionel
+#   0,1       alina
+#   0,2       teo
+#   0,3       alina
+
 copiiSuparati = {}
+
 copilStart = ""
 copilScop = ""
 
-for line in linii:
-    linie = line.strip("\n").split()
-    lengthLinie = len(linie)
-    if lengthLinie==6:
-        randuri+=1
-        liniiCopii.append(linie)
+for linie in linii:
+    linieSplit = linie.strip("\n").split()
+    lengthLinie = len(linieSplit)
+    # memorare pozitii copii
+    if lengthLinie == 6:
+        for pozitie in range(len(linieSplit)):
+            coordCopii[linieSplit[pozitie]] = (numarRanduri, pozitie)
+            numeCopii[(numarRanduri, pozitie)] = linieSplit[pozitie]
+        numarRanduri += 1
+        numarColoane += 1
+    # memorare copii suparati
     elif lengthLinie==2:
-        if linie[0] not in copiiSuparati:
-            copiiSuparati[linie[0]] = []
-        if linie[1] not in copiiSuparati:
-            copiiSuparati[linie[1]] = []
-        copiiSuparati[linie[0]].append(linie[1])
-        copiiSuparati[linie[1]].append(linie[0])
-    elif linie[0] == "mesaj:":
-        copilStart = linie[1]
-        copilScop = linie[3]
+        if linieSplit[0] not in copiiSuparati:
+            # daca copilul nr 1 nu se afla in lista de copii suparati, il adaugam
+            copiiSuparati[linieSplit[0]] = []
+        if linieSplit[1] not in copiiSuparati:
+            # daca copilul nr 2 nu se afla in lista de copii suparati, il adaugam
+            copiiSuparati[linieSplit[1]] = []
+        # adaugam fiecare copil in lista de copiiSuparati ai celuilalt
+        copiiSuparati[linieSplit[0]].append(linieSplit[1])
+        copiiSuparati[linieSplit[1]].append(linieSplit[0])
+    # memorare nodStart si nodScop
+    elif linieSplit[0] == "mesaj:":
+        copilStart = linieSplit[1]
+        copilScop = linieSplit[3]
 
-# Clase ajutatoare: NodParcurgere, Nod, Problema
+print(numeCopii)
+# Clase ajutatoare pentru folosirea alogirtmului A*: NodParcurgere, Nod, Problema
 
 # In exemplul dat la laborator s-a integrat clasa Nod in clasa NodParcurgere prin a introduce info si h in NodParcurgere,
 # Pentru evitarea confuziei, am ales sa folosesc aceeasi abordare, de aceea urmatoarea secventa de cod este comentata:
@@ -159,6 +187,7 @@ for line in linii:
 #                f"h^: {self.h_} \n"
 
 ########################################### CLASA NOD PARCURGERE ########################################
+
 # Clasa NodParcurgere, cu proprietatile:
 #   nod - referinta catre nodul corespunzator din graf
             # #   - info despre nod
@@ -174,7 +203,7 @@ for line in linii:
 
 
 class NodParcurgere:
-    def __init__(self, copil, cost, h_, directie, parinte=None):
+    def __init__(self, copil, cost, h_, parinte=None, directie=None):
         self.copil = copil
         self.parinte = parinte # daca este radacina => None
         self.g = cost
@@ -182,14 +211,14 @@ class NodParcurgere:
         # f = g + h
         self.f = self.g + self.h_
 
-        # in cazul problemei noastre, avem nevoie de o directie a drumul care poate fi una din urmatoarele:
+        # in cazul problemei noastre, avem nevoie de o directie din care se vine, care poate fi una din urmatoarele:
         #               '^'
         #               '>'
         #               '<'
         #               'v'
         #               '>>'
         #               '<'
-        # astfel vom introduce inca o proprietate numita directie
+        # astfel vom introduce inca o proprietate numita directie care va fi setata ulterior
         self.directie = directie
 
     def obtineDrum(self):
@@ -207,13 +236,153 @@ class NodParcurgere:
         return len(drum)
 
     #  pornind de la exemplul din laborator => verificam daca un nod face parte din drum
-    def contineInDrum(self, copilNodNou):
-        nodDrum = self
-        while nodDrum is not None:
-            if copilNodNou ==  nodDrum.copil:
+    def contineInDrum(self, nodNou):
+        nodCurent = self
+        while nodCurent is not None:
+            if nodNou == nodCurent.copil:
                 return True
-            nodDrum = nodDrum.parinte
+            nodCurent = nodCurent.parinte
             return False
+
+    # functia de generare a succesorilor
+    # generam lista tuturor succesorilor posibili al nodului curent
+    def expandeaza(self, nodScop, tipEuristica="euristica banala"):
+        global numarRanduri
+        global copiiSuparati
+        # initializam lista succesorilor cu multimea vida
+        succesori = []
+        # preluam coordonatele copilului
+        pozRand, pozCol = coordCopii[self.copil]
+
+        # selectam toti vecinii:
+        # VECINUL DE SUS ^
+        # testam daca exista vecinul de sus
+        if pozRand - 1 >= 0:
+            # salvam numele copilului
+            numeSuccesor = numeCopii[(pozRand - 1, pozCol)]
+            # testam daca acest succesor este certat cu copilul curent sau daca este liber
+            if not self.esteLiberSauSuntSuparati(self, numeSuccesor):
+                # creez nodul si calculez h_
+                succesor = NodParcurgere(numeSuccesor, self.g +1, self.g + 1 + self.calculeazaH_(self, numeSuccesor, nodScop))
+                # setez directia catre acest succesor
+                succesor.directie = "^"
+                # adaug succesorul in lista succesorilor
+                succesori.append(succesor)
+        # VECINUL DE JOS v
+        # testam daca exista vecinul de jos -> SEPARAT ULTIMA SI PENULTIMA BANCA pozRand +2  si pozRand+1 == numarRnaduri
+        # Daca suntem pe penultimul sau ultimul rand
+        if pozRand + 1 == numarRanduri or pozRand + 2 == numarRanduri:
+            # verificam daca este intr-o coloana impara sau para => ne mutam la dreapta sau la stanga
+            # daca este coloana impara => ne mutam la dreapta => trebuie sa verificam daca exista un alt set de
+            # banci la dreapta
+            if (pozCol % 2 == 1) and (pozCol != numarColoane - 1 ):
+                # salvam numele copilului
+                numeSuccesor = numeCopii[(pozRand - 1, pozCol)]
+                # testam daca acest succesor este certat cu copilul curent sau daca este liber
+                if not self.esteLiberSauSuntSuparati(self, numeSuccesor):
+                    # creez nodul si calculez h_
+                    succesor = NodParcurgere(numeSuccesor, self.g + 1,
+                                             self.g + 1 + self.calculeazaH_(self, numeSuccesor, nodScop))
+                    # setez directia catre acest succesor
+                    succesor.directie = ">>"
+                    # adaug succesorul in lista succesorilor
+                    succesori.append(succesor)
+             # daca este coloana para => ne mutam la stanga  => trebuie sa verificam daca exista un alt set de
+             # banci la stanga
+            elif (pozCol % 2 == 0) and (pozCol -1 > -1):
+                 # salvam numele copilului
+                 numeSuccesor = numeCopii[(pozRand - 1, pozCol)]
+                 # testam daca acest succesor este certat cu copilul curent sau daca este liber
+                 if not self.esteLiberSauSuntSuparati(self, numeSuccesor):
+                     # creez nodul si calculez h_
+                     succesor = NodParcurgere(numeSuccesor, self.g + 1,
+                                              self.g + 1 + self.calculeazaH_(self, numeSuccesor, nodScop))
+                     # setez directia catre acest succesor
+                     succesor.directie = "<<"
+                     # adaug succesorul in lista succesorilor
+                     succesori.append(succesor)
+        elif pozRand + 1 < numarRanduri:
+            numeSuccesor = numeCopii[(pozRand + 1, pozCol)]
+            # testam daca acest succesor este certat cu copilul curent sau daca este liber
+            if not self.esteLiberSauSuntSuparati(self, numeSuccesor):
+                # creez nodul si calculez h_
+                succesor = NodParcurgere(numeSuccesor, self.g + 1,
+                                         self.g + 1 + self.calculeazaH_(self, numeSuccesor, nodScop))
+                # setez directia catre acest succesor
+                succesor.directie = "v"
+                # adaug succesorul in lista succesorilor
+                succesori.append(succesor)
+        # VECINUL DIN STANGA
+        # testam daca exista vecinul din stanga
+        if pozRand % 2 == 1:
+            numeSuccesor = numeCopii[(pozRand, pozCol - 1)]
+            # testam daca acest succesor este certat cu copilul curent sau daca este liber
+            if not self.esteLiberSauSuntSuparati(self, numeSuccesor):
+                # creez nodul si calculez h_
+                succesor = NodParcurgere(numeSuccesor, self.g + 1,
+                                         self.g + 1 + self.calculeazaH_(self, numeSuccesor, nodScop))
+                # setez directia catre acest succesor
+                succesor.directie = "<"
+                # adaug succesorul in lista succesorilor
+                succesori.append(succesor)
+
+        # VECINUL DIN DREAPTA
+        # testam daca exista vecinul din dreapta
+        if pozRand % 2 == 0:
+            numeSuccesor = numeCopii[(pozRand, pozCol + 1)]
+            # testam daca acest succesor este certat cu copilul curent sau daca este liber
+            if not self.esteLiberSauSuntSuparati(self, numeSuccesor):
+                # creez nodul si calculez h_
+                succesor = NodParcurgere(numeSuccesor, self.g + 1,
+                                         self.g + 1 + self.calculeazaH_(self, numeSuccesor, nodScop))
+                # setez directia catre acest succesor
+                succesor.directie = ">"
+                # adaug succesorul in lista succesorilor
+                succesori.append(succesor)
+        return succesori
+
+    # calculatera costului pentru o mutare
+    def calculeazaH_(self, copil, nodScop, tipEuristica="euristica banala"):
+        # euristica banala = daca este nodScop => 0, daca nu este => 1
+        if tipEuristica == "euristica banala":
+            if copil != nodScop.copil:
+                return 1
+            return 0
+        # eursitica admisibila 1=
+        # elif tipEuristica =="euristica admisibila 1":
+        # elif tipEuristica == "euristica admisibila 2":
+        # elif tipEuristica == "euristica neadmisibila":
+
+
+    def esteLiberSauSuntSuparati(self, copil, nodScop):
+        if self.esteLocLiber(copil, "liber") or self.copiiSuparati(self, copil, nodScop):
+            return True
+        return False
+
+    def esteLocLiber(copil, liber):
+        # daca locul este
+        if copil == liber:
+            return True
+        return False
+
+    def copiiSuparati(self, copil):
+        global copiiSuparati
+        if (self.copil in copiiSuparati) and (copil in copiiSuparati[self.copil]):
+            return True
+        return False
+
+    # test scop pe care un agent il ploate aplica unei singure descrieri de stare pentru a determina daca ea este o
+    # stare de tip scop => in cazul nostru, starea de tip scop == copilScop
+
+    def testScop(self, nodScop):
+        return self.copil == nodScop.copil
+
+    def __str__(self):
+        f"Nod: {self.copil} \n" \
+        f"Cost nodStart -> nodCurent: {self.g} \n" \
+        f"Cost estimativ nodCurent -> nodScop: {self.h_} \n" \
+        f"Drum = {('->').join(self.obtineDrum())} \n" \
+        f"Cost estimat pentru drum: {self.f} \n"
 
     def __repr__(self):
         return f"Nod: {self.copil} \n" \
@@ -224,28 +393,6 @@ class NodParcurgere:
 
 
 
-# test scop pe care un agent il ploate aplica unei singure descrieri de stare pentru a determina daca ea este o
-# stare de tip scop => in cazul nostru, starea de tip scop == copilScop
-
-    def testScop(self, nodScop):
-        return self.copil == nodScop.copil
-
-# functia de generare a succesorilor
-
-# calculatera costului pentru o mutare
-
-# 4 euristici
-
-# 4 fisierei de input
-
-# afisare output
-
-# validare si optimizare
-
-# comentarii clase
-
-# documentatie
-# in README.MD
 ################################################# PROBLEMA ############################################
 
 # Clasa Problema => contine datele problemei
@@ -255,8 +402,69 @@ class Problema:
         self.nodStart = nodStart
         self.nodScop = nodScop
 
+    def a_star(self, tipEuristica="euristica banala"):
+        # pentru a nu folosi self.nodStart si self.nodScop am initializat local aceste 2 variabile
+        nodStart = self.nodStart
+        nodScop = self.nodScop
+        # # graf de cautare care contine doar nodStart
+        # G = [nodStart]
+        # adaugam OPEN + adaugam nodul pentru inceput nodStart in OPEN
+        open = [nodStart]
+        # aduagam lista CLOSED care este vida
+        closed = []
+        # esteOpenVida initalizat cu False pentru ca in OPEN se afla nodStart
+        esteOpenVida = False
+        # daca OPEN ajunge vida => False => ESEC, daca nodCurent ajunge sa fie nodScop => True => Success
+        end = False
+
+        while not esteOpenVida:
+            # selectez primul nod din lista OPEN  si il scot din OPEN
+            nodCurent = open.pop(0)
+            # il adaug in CLOSED => nodCurent = nod n
+            closed.append(nodCurent)
+            # daca nodCurent = nodScop => oprire secutie cu success
+            if nodCurent.testScop(nodScop):
+                # Success
+                end = True
+                # ar trebui sa returnez drumul in G
+                drum = nodCurent.obtineDrum()
+                # write Output
+                # nodStart ^/>/v/</>>/<<....>/v/</>>/<</^ nodScop
+                for nod in drum:
+                    fisierOut.write(f"{nod.copil} ")
+                    if nod.directie is not None:
+                        fisierOut.write(f"{nod.directie} ")
+            if not end:
+                # extindem nodul n
+                # generam multimea M
+                multimeaM = nodCurent.expandeaza(nodScop, tipEuristica)
+                for succesor in multimeaM:
+                    # verificam daca este in OPEN
+                    if self.esteInLista(succesor, open and
+
+                    # verificam daca este in CLOSED
+
+
+            #testam daca Open este vida
+            # if not open:
+            #     esteOpenVida = True
+
+    def esteInLista(self, copil, lista):
+        for nod in lista:
+            if nod.copil == copil:
+                return True
+        return False
+
 ########################################### SCRIERE DATE OUTPUT ########################################
+# afisare output + 4 fisierei de input
 
 
 fisierIn.close()
 fisierOut.close()
+
+
+
+
+
+# documentatie
+# in README.MD + README.PDF(transformarea MD in PDF)
