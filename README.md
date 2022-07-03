@@ -3,7 +3,7 @@
 
 ---
 
-## PB_4 --- Problema de cautare (un mesaj…) 
+## 1 --- Problema de cautare (un mesaj…) 
 
 In drum spre scoala un copilas a auzit doi copii mai mari vorbind despre un coleg si prieten bun de-al lui. Cei doi voiau sa-i faca o farsa rautacioasa in prima pauza. Copilasul insa a ajuns dupa ce incepuse ora si a trebuit sa se aseze direct in banca, fara a-si putea avertiza colegul de primejdie. Din fericire i-a venit in minte sa-i trimita din coleg in coleg un bilet cu un mesaj in care sa-l atentioneze despre farsa.
 Copii sunt asezati in banci de cate doua persoane. Bancile sunt dispuse in trei coloane astfel:  
