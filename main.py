@@ -153,6 +153,8 @@ for linie in linii:
         numarRanduri += 1
         numarColoane += 1
     # memorare copii suparati
+    elif lengthLinie[0] == suparati:
+        continue
     elif lengthLinie == 2:
         if linieSplit[0] not in copiiSuparati:
             # daca copilul nr 1 nu se afla in lista de copii suparati, il adaugam
@@ -538,8 +540,6 @@ euristica = int(input(f"Euristici posibile: \n"
                       f"3. Euristica admisibila 2 \n"
                       f"4. Euristica neadmisibila  \n"
                       f"Introduceti numarul euristicii dorite: "))
-if euristica > 0 or euristica < 4:
-    graphProblema.a_star(euristica)
 
 alg = int(input(f"Algoritm: \n"
                 f"1. A*"
@@ -548,8 +548,8 @@ alg = int(input(f"Algoritm: \n"
                 f"4. BF"
                 f"5. DF"))
 
-
-
+if euristica > 0 or euristica < 4:
+    graphProblema.a_star(euristica)
 
 # documentatie
 # in README.MD + README.PDF(transformarea MD in PDF)
@@ -557,12 +557,9 @@ alg = int(input(f"Algoritm: \n"
 ############################################# EXTRA ALGORITMI #######################################
 
 def breadth_first(graphProblema):
-    global nrSolutiiCautate
-    # in coada vom avea doar noduri de tip NodParcurgere (nodurile din arborele de parcurgere)
-    # c este coada
-    # in coada vom avea noduri (frunze) din arborele de parcurgere
+    global NSOL
     c = [NodParcurgere(graphProblema.indiceNod(copilStart), graphProblema.start, None)]
-    continua = True  # variabila pe care o setez la false cand consider ca s-au afisat suficiente solutii
+    continua = True  
     while len(c) > 0:
         print("Coada: ", c)
         input()
@@ -570,21 +567,17 @@ def breadth_first(graphProblema):
         if graphProblema.testeaza_scop(nodCurent):
             print("Solutie: ", end="")
             nodCurent.afisDrum()
-            nrSolutiiCautate -= 1
-            if nrSolutiiCautate == 0:
+            NSOL -= 1
+            if NSOL == 0:
                 return
         listaSuccesori = graphProblema.genereazaSuccesori(nodCurent)
 
         c.extend(listaSuccesori)
 
 
-nrSolutiiCautate = 4
-continua = True
-
 
 # initializare depth_first
 def depth_first(graphProblema):
-    # vom simula o stiva prin relatia de parinte a nodului curent
     df(NodParcurgere(graphProblema.noduri.index(graphProblema.start), graphProblema.start, None))
 
 
@@ -675,10 +668,6 @@ def construieste_drum(graphProblema, nodCurent, limita, NSOL):
             minim = rez
             print("Noul minim: ", minim)
     return NSOL, minim
-
-
-# construieste_drum(a)->construieste_drum(c)
-ida_star(graphProblema, NSOL=3)
 
 
 fisierIn.close()
