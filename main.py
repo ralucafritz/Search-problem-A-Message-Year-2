@@ -231,9 +231,16 @@ class NodParcurgere:
 
     def afisDrum(self):
         drum = self.obtineDrum()
-        print(("->").join(drum))
-        print("Cost", self.g)
+        for nod in drum:
+            print(f"{nod.copil} {nod.directie} ")
         return len(drum)
+
+    def outputDrum(self):
+        drum = self.obtineDrum()
+        for nod in drum:
+            fisierOut.write(f"{nod.copil} ")
+            if nod.directie is not None:
+                fisierOut.write(f"{nod.directie} ")
 
     #  pornind de la exemplul din laborator => verificam daca un nod face parte din drum
     def contineInDrum(self, nodNou):
@@ -304,7 +311,7 @@ class NodParcurgere:
         elif pozRand + 1 < numarRanduri:
             numeSuccesor = numeCopii[(pozRand + 1, pozCol)]
             # testam daca acest succesor este certat cu copilul curent sau daca este liber
-            if not self.esteLiberSauSuntSuparati(self, numeSuccesor):
+            if not self.esteLiberSauSuntSuparati(numeSuccesor):
                 # creez nodul si calculez h_
                 succesor = NodParcurgere(numeSuccesor, self.g + 1,
                                          self.g + 1 + self.calculeazaH_(self, numeSuccesor, nodScop))
@@ -331,10 +338,10 @@ class NodParcurgere:
         if pozRand % 2 == 0:
             numeSuccesor = numeCopii[(pozRand, pozCol + 1)]
             # testam daca acest succesor este certat cu copilul curent sau daca este liber
-            if not self.esteLiberSauSuntSuparati(self, numeSuccesor):
+            if not self.esteLiberSauSuntSuparati(numeSuccesor):
                 # creez nodul si calculez h_
                 succesor = NodParcurgere(numeSuccesor, self.g + 1,
-                                         self.g + 1 + self.calculeazaH_(self, numeSuccesor, nodScop))
+                                         self.g + 1 + self.calculeazaH_(numeSuccesor, nodScop))
                 # setez directia catre acest succesor
                 succesor.directie = ">"
                 # adaug succesorul in lista succesorilor
@@ -354,20 +361,21 @@ class NodParcurgere:
         # elif tipEuristica == "euristica neadmisibila":
 
 
-    def esteLiberSauSuntSuparati(self, copil, nodScop):
-        if self.esteLocLiber(copil, "liber") or self.copiiSuparati(self, copil, nodScop):
+    def esteLiberSauSuntSuparati(self, copil):
+        if self.esteLocLiber(copil) or self.copiiSuparati(copil):
             return True
         return False
 
-    def esteLocLiber(copil, liber):
-        # daca locul este
-        if copil == liber:
+    def esteLocLiber(self, copil):
+        # daca locul este liber
+        if copil == "liber":
             return True
         return False
 
     def copiiSuparati(self, copil):
+        # daca cei 2 copii sunt suparati
         global copiiSuparati
-        if (self.copil in copiiSuparati) and (copil in copiiSuparati[self.copil]):
+        if (self.copil in copiiSuparati[copil]) and (copil in copiiSuparati[self.copil]):
             return True
         return False
 
@@ -395,10 +403,10 @@ class NodParcurgere:
 
 ################################################# PROBLEMA ############################################
 
-# Clasa Problema => contine datele problemei
+# Clasa Graph Problema => contine datele problemei + graful de cautare
 
-class Problema:
-    def __init__(self, nodStart, nodScop):
+class GraphProblema:
+    def __init__(self,  nodStart, nodScop):
         self.nodStart = nodStart
         self.nodScop = nodScop
 
@@ -426,24 +434,51 @@ class Problema:
             if nodCurent.testScop(nodScop):
                 # Success
                 end = True
-                # ar trebui sa returnez drumul in G
-                drum = nodCurent.obtineDrum()
                 # write Output
                 # nodStart ^/>/v/</>>/<<....>/v/</>>/<</^ nodScop
-                for nod in drum:
-                    fisierOut.write(f"{nod.copil} ")
-                    if nod.directie is not None:
-                        fisierOut.write(f"{nod.directie} ")
+                drum = nodCurent.outputDrum()
             if not end:
-                # extindem nodul n
-                # generam multimea M
-                multimeaM = nodCurent.expandeaza(nodScop, tipEuristica)
+                # extindem nodul n -> obtinem succesorii
+                # generam multimea M in care retinem succesorii lui n
+                multimeaM = nodCurent.expandeaza(nodScop, tipEuristica="euristica banala")
                 for succesor in multimeaM:
-                    # verificam daca este in OPEN
-                    if self.esteInLista(succesor, open and
-
-                    # verificam daca este in CLOSED
-
+                    # verificam daca succesorii din M sunt in OPEN sau in CLOSED (adica daca sunt deja in graful de cautare)
+                    # comparam valorile f pentru a retine copilul cu valoare f mai mica
+                    # si il scoatem din OPEN si CLOSED pentru a il adauga in OPEN intr-un mod sortat
+                    if self.esteInLista(succesor,open):
+                        for nod in open:
+                            if succesor.copil == nod.copil:
+                                if succesor.f >= nod.f:
+                                    multimeaM.remove(succesor)
+                                else:
+                                    open.remove(succesor)
+                    elif self.esteInLista(succesor, closed):
+                        for nod in closed:
+                            if succesor.copil == nod.copil:
+                                if succesor.f >= nod.f:
+                                    multimeaM.remove(succesor)
+                                else:
+                                    closed.remove(succesor)
+                for succesor in multimeaM:
+                    i = 0
+                    gasitLoc = False
+                    # trecem prin toata lista OPEN pana gasim o locatie unde f-ul succesorului este mai mic ca f-ul nodului
+                    # aflat la pozitia i in OPEN.
+                    # daca se gaseste, se insereaza in fata acestuia
+                    # daca nu se gaseste, se adauga la final
+                    for i in range(len(open)):
+                        # ordonam in principal dupa f, dar daca f-urile sunt egale, se sorteaza descrescator dupa g
+                        # puteam folosi si adaugarea sau modificarea in open direct a nodurilor si sortarea ulterioara
+                        # prin open.sort(key=lambda x: (x.f, -x,g) care face exact acelasi lucru
+                        if open[i].f > succesor.f or(open[i].f == succesor.f and open[i].g <= succesor.g):
+                            gasitLoc =  True
+                            break
+                    if gasitLoc:
+                        open.insert(i, succesor)
+                    else:
+                        open.append(succesor)
+        if not end:
+            fisierOut.write("Nu exista solutie")
 
             #testam daca Open este vida
             # if not open:
@@ -455,8 +490,15 @@ class Problema:
                 return True
         return False
 
+
 ########################################### SCRIERE DATE OUTPUT ########################################
 # afisare output + 4 fisierei de input
+
+nodStart = NodParcurgere(copilStart, 0, 0)
+nodScop = NodParcurgere(copilScop, 0, 0)
+
+graphProblema = GraphProblema(nodStart, nodScop)
+graphProblema.a_star()
 
 
 fisierIn.close()
