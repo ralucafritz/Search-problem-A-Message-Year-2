@@ -1,18 +1,20 @@
 ##### Fritz Raluca-Mihaela
-##### Artifical Intelligence Mini-Project
+##### Artifical Intelligence KR Mini-Project
 
 ---
 
-## 1 --- Problema de cautare (un mesaj…) 
+## 1. Problema de cautare (un mesaj…) 
 
-In drum spre scoala un copilas a auzit doi copii mai mari vorbind despre un coleg si prieten bun de-al lui. Cei doi voiau sa-i faca o farsa rautacioasa in prima pauza. Copilasul insa a ajuns dupa ce incepuse ora si a trebuit sa se aseze direct in banca, fara a-si putea avertiza colegul de primejdie. Din fericire i-a venit in minte sa-i trimita din coleg in coleg un bilet cu un mesaj in care sa-l atentioneze despre farsa.
+In drum spre scoala un copilas a auzit doi copii mai mari vorbind despre un coleg si prieten bun de-al lui. Cei doi voiau sa-i faca o farsa rautacioasa in prima pauza. Copilasul insa a ajuns dupa ce incepuse ora si a trebuit sa se aseze direct in banca, fara a-si putea avertiza colegul de primejdie. Din fericire i-a venit in minte sa-i trimita din coleg in coleg un bilet cu un mesaj in care sa-l atentioneze despre farsa.  
+
 Copii sunt asezati in banci de cate doua persoane. Bancile sunt dispuse in trei coloane astfel:  
-![](/Images/img1.jpg)  
+
+![](/Images/img1.jpg)   
 
 Un copil poate da fara probleme biletul catre colegul de banca, la fel neobservat de catre profesor poate da biletul catre colegii din fata sau din spatele lui, insa nu si in diagonala, deoarece, intinzanduse peste banca ar atrage privirea profesorului.    
 
 Considerand fragmentul de clasa de mai jos:  
-![](Images/img2.jpg)
+![](Images/img2.jpg)  
 
 Elevul a poate trimite biletul doar catre b sau c.  
 
@@ -53,14 +55,15 @@ mesaj: ionel -> dragos
 Exemplu de drum din fisierul de iesire:  
 
 ```markdown
-ionel > alina v diana v costin v simona v razvan v andrei >> oana ^ radu > patricia v victor v nicoleta >> maria > gabi ^ 
-dorel ^ elena < gigel ^ tamara > dragos
+ionel > alina v diana v costin v simona v razvan v andrei >> oana ^ 
+radu > patricia v victor v nicoleta >> maria > gabi ^ dorel 
+^ elena < gigel ^ tamara > dragos
 ```
 
 In urma rularii se va afisa drumul parcurs, in ordine cronologica.
 Daca biletelul merge in cadrul aceluiasi rand, deci catre un coleg de banca,
-in stanga, se va afisa <, daca merge in dreapta, se va afisa >.
-Daca biletelul merge spre spatele clasei, intre copiii care transmit biletul se va
-afisa un v (pe post de sagetica in jos), iar daca merge spre fata clasei, se va afisa ^ pe post de sagetica in sus.   
+in stanga, se va afisa <, daca merge in dreapta, se va afisa >.  
 
-Cand biletul se deplaseaza spre stanga de pe un rand de banci pe altul, se va afisa <<, iar spre dreapta: >>. 
+Daca biletelul merge spre spatele clasei, intre copiii care transmit biletul se va afisa un v (pe post de sagetica in jos), iar daca merge spre fata clasei, se va afisa ^ pe post de sagetica in sus.   
+
+Cand biletul se deplaseaza spre stanga de pe un rand de banci pe altul, se va afisa <<, iar spre dreapta: >>.   
