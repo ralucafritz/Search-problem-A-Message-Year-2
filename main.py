@@ -2,6 +2,15 @@
 # GRUPA 243
 # Problema de cautare (un mesaj...)
 
+import stopit
+
+@stopit.threading_timeoutable(default="intrat in timeout")
+def functie(n):
+    j=0;
+    for i in range(n):
+        print(i, end=" ")
+    return "functie finalizata"
+
 """
 In drum spre scoala un copilas a auzit doi copii mai mari vorbind despre
 un coleg si prieten bun de-al lui. Cei doi voiau sa-i faca o farsa rautacioasa
