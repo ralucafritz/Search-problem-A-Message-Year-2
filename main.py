@@ -4,12 +4,14 @@
 
 import stopit
 
+
 @stopit.threading_timeoutable(default="intrat in timeout")
 def functie(n):
-    j=0;
+    j = 0;
     for i in range(n):
         print(i, end=" ")
     return "functie finalizata"
+
 
 """
 In drum spre scoala un copilas a auzit doi copii mai mari vorbind despre
@@ -104,16 +106,14 @@ Cand biletul se deplaseaza spre stanga de pe un rand de banci pe altul, se va af
 """
 # Citire fisiere de intrare / iesire de la tastatura + NSOL + timpul de timeout
 
-# pathIn = input("path fisierIn: ")
-# fisierIn = open(pathIn,'r')
-# pathOut = input("path fisierOut: ")
-# fisierOut = open(pathOut,'w')
-# NSOL = int(input("NSOL= "))
-# timeout = int(input(Timp de timeout= "))
+pathIn = input("path fisierIn: ")
+fisierIn = open(pathIn,'r')
+pathOut = input("path fisierOut: ")
+fisierOut = open(pathOut,'w')
+NSOL = int(input("NSOL= "))
+timeout = int(input("Timp de timeout= "))
 ########################################### CITIRE DATE INPUT ########################################
 # Citire folosita pentru testing
-fisierIn = open('fisier.in', 'r')
-fisierOut = open('fisier.out', 'w')
 
 # citire din fisier + parsare fisier de input care respecta formatul cerut in enunt
 linii = fisierIn.readlines()
@@ -541,8 +541,145 @@ euristica = int(input(f"Euristici posibile: \n"
 if euristica > 0 or euristica < 4:
     graphProblema.a_star(euristica)
 
-fisierIn.close()
-fisierOut.close()
+alg = int(input(f"Algoritm: \n"
+                f"1. A*"
+                f"2. A* optimizat"
+                f"3. IDA*"
+                f"4. BF"
+                f"5. DF"))
+
+
+
 
 # documentatie
 # in README.MD + README.PDF(transformarea MD in PDF)
+
+############################################# EXTRA ALGORITMI #######################################
+
+def breadth_first(graphProblema):
+    global nrSolutiiCautate
+    # in coada vom avea doar noduri de tip NodParcurgere (nodurile din arborele de parcurgere)
+    # c este coada
+    # in coada vom avea noduri (frunze) din arborele de parcurgere
+    c = [NodParcurgere(graphProblema.indiceNod(copilStart), graphProblema.start, None)]
+    continua = True  # variabila pe care o setez la false cand consider ca s-au afisat suficiente solutii
+    while len(c) > 0:
+        print("Coada: ", c)
+        input()
+        nodCurent = c.pop(0)
+        if graphProblema.testeaza_scop(nodCurent):
+            print("Solutie: ", end="")
+            nodCurent.afisDrum()
+            nrSolutiiCautate -= 1
+            if nrSolutiiCautate == 0:
+                return
+        listaSuccesori = graphProblema.genereazaSuccesori(nodCurent)
+
+        c.extend(listaSuccesori)
+
+
+nrSolutiiCautate = 4
+continua = True
+
+
+# initializare depth_first
+def depth_first(graphProblema):
+    # vom simula o stiva prin relatia de parinte a nodului curent
+    df(NodParcurgere(graphProblema.noduri.index(graphProblema.start), graphProblema.start, None))
+
+
+# predicatul recursiv
+def df(nodCurent):
+    global nrSolutiiCautate, continua
+    if not continua:
+        return
+    print("Stiva actuala: " + "->".join(nodCurent.obtineDrum()))
+    input()
+    if graphProblema.testeaza_scop(nodCurent):
+        print("Solutie: ", end="")
+        nodCurent.afisDrum()
+        nrSolutiiCautate -= 1
+        if nrSolutiiCautate == 0:
+            continua = False
+            return
+    listaSuccesori = graphProblema.genereazaSuccesori(nodCurent)
+    for succesor in listaSuccesori:
+        df(succesor)
+
+
+def dfi(nodCurent, adancime):
+    global nrSolutiiCautate, continua
+    if not continua:
+        return
+    print("Stiva actuala: " + "->".join(nodCurent.obtineDrum()))
+    input()
+    if adancime == 1 and graphProblema.testeaza_scop(nodCurent):
+        print("Solutie: ", end="")
+        nodCurent.afisDrum()
+        nrSolutiiCautate -= 1
+        if nrSolutiiCautate == 0:
+            continua = False
+            return
+    if adancime > 1:
+        listaSuccesori = graphProblema.genereazaSuccesori(nodCurent)
+        for succesor in listaSuccesori:
+            dfi(succesor, adancime - 1)
+
+
+def depth_first_iterativ(graphProblema):
+    for i in range(1, graphProblema.nrNoduri + 1):
+        if nrSolutiiCautate > 0:
+            print("Adancime maxima ", i)
+            dfi(NodParcurgere(graphProblema.noduri.index(graphProblema.start), graphProblema.start, None), i)
+            print("----------------------------")
+
+
+def ida_star(graphProblema, NSOL):
+    nodStart = NodParcurgere(graphProblema.indiceNod(graphProblema.start), graphProblema.start, None, 0, graphProblema.calculeaza_h(graphProblema.start))
+    limita = nodStart.f
+    while True:
+
+        print("Limita de pornire: ", limita)
+        nrSolutiiCautate, rez = construieste_drum(graphProblema, nodStart, limita, NSOL)
+        if rez == "gata":
+            break
+        if rez == float('inf'):
+            print("Nu mai exista solutii!")
+            break
+        limita = rez
+        print(">>> Limita noua: ", limita)
+        input()
+
+
+def construieste_drum(graphProblema, nodCurent, limita, NSOL):
+    print("A ajuns la: ", nodCurent)
+    if nodCurent.f > limita:
+        return NSOL, nodCurent.f
+    if graphProblema.testeaza_scop(nodCurent) and nodCurent.f == limita:
+        print("Solutie: ")
+        nodCurent.afisDrum()
+        print(limita)
+        print("\n----------------\n")
+        input()
+        NSOL -= 1
+        if NSOL == 0:
+            return 0, "gata"
+    lSuccesori = graphProblema.genereazaSuccesori(nodCurent)
+    minim = float('inf')
+    for s in lSuccesori:
+        nrSolutiiCautate, rez = construieste_drum(graphProblema, s, limita, NSOL)
+        if rez == "gata":
+            return 0, "gata"
+        print("Compara ", rez, " cu ", minim)
+        if rez < minim:
+            minim = rez
+            print("Noul minim: ", minim)
+    return NSOL, minim
+
+
+# construieste_drum(a)->construieste_drum(c)
+ida_star(graphProblema, NSOL=3)
+
+
+fisierIn.close()
+fisierOut.close()
